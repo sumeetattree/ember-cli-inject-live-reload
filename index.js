@@ -32,7 +32,8 @@ module.exports = {
   serverMiddleware: function(config) {
     var self = this;
     var app = config.app;
-    var options = config.options;
+    var options = Object.assign(config.options, this.app.options.emberCLILiveReload);
+
     // maintaining `baseURL` for backwards compatibility. See: http://emberjs.com/blog/2016/04/28/baseURL.html
     var baseURL = options.liveReloadBaseUrl || options.rootURL || options.baseURL;
 
