@@ -22,8 +22,8 @@ module.exports = {
 
     var liveReloadPath = buildLiveReloadPath(options.liveReloadPrefix) || '/';
     let liveReloadPort;
-    if (options.liveReloadPort !== options.port) {
-      liveReloadPort = options.liveReloadPort
+    if (options.liveReloadPort !== 'autoDetect') {
+      liveReloadPort = options.liveReloadPort || options.port;
     }
     return `(function() {${liveReloadOptions ? "\n  window.LiveReloadOptions = " + JSON.stringify(liveReloadOptions) + ";" : ''}
   var srcUrl = ${options.liveReloadJsUrl ? "'" + options.liveReloadJsUrl + "'" : null};
@@ -31,7 +31,10 @@ module.exports = {
   var liveReloadPort = ${liveReloadPort};
   var defaultPort = location.protocol === 'https:' ? 443 : 80;
   var port = liveReloadPort || location.port || defaultPort;
-  var prefixURL = '${liveReloadPort ? "(location.protocol || 'http:') + '//' + host + ':' + " + liveReloadPort : ''}';
+  var prefixURL = '';
+  if (liveReloadPort) {
+    prefixURL = (location.protocol || 'http:') + '//' + host + ':' + liveReloadPort;
+  }
   var src = srcUrl || prefixURL + '${liveReloadPath + 'livereload.js?port='}' + port + '&host=' + host;
   var script    = document.createElement('script');
   script.type   = 'text/javascript';
