@@ -1,5 +1,7 @@
 'use strict';
 
+var buildLiveReloadPath = require('clean-base-url');
+
 module.exports = {
   name: 'live-reload-middleware',
 
@@ -18,15 +20,24 @@ module.exports = {
       liveReloadOptions.snipver = 1;
     }
 
-    return "(function() {\n " +
-           (liveReloadOptions ? "window.LiveReloadOptions = " + JSON.stringify(liveReloadOptions) + ";\n " : '') +
-           "var srcUrl = " + (options.liveReloadJsUrl ? "'" + options.liveReloadJsUrl + "'" : "null") + ";\n " +
-           "var src = srcUrl || ((location.protocol || 'http:') + '//' + (location.hostname || 'localhost') + ':" + options.liveReloadPort + "/livereload.js');\n " +
-           "var script    = document.createElement('script');\n " +
-           "script.type   = 'text/javascript';\n " +
-           "script.src    = src;\n " +
-           "document.getElementsByTagName('head')[0].appendChild(script);\n" +
-           "}());";
+    var liveReloadPath = buildLiveReloadPath(options.liveReloadPrefix) || '/';
+    let liveReloadPort;
+    if (options.liveReloadPort !== options.port) {
+      liveReloadPort = options.liveReloadPort
+    }
+    return `(function() {${liveReloadOptions ? "\n  window.LiveReloadOptions = " + JSON.stringify(liveReloadOptions) + ";" : ''}
+  var srcUrl = ${options.liveReloadJsUrl ? "'" + options.liveReloadJsUrl + "'" : null};
+  var host= location.hostname || 'localhost';
+  var liveReloadPort = ${liveReloadPort};
+  var defaultPort = location.protocol === 'https:' ? 443 : 80;
+  var port = liveReloadPort || location.port || defaultPort;
+  var prefixURL = '${liveReloadPort ? "(location.protocol || 'http:') + '//' + host + ':' + " + liveReloadPort : ''}';
+  var src = srcUrl || prefixURL + '${liveReloadPath + 'livereload.js?port='}' + port + '&host=' + host;
+  var script    = document.createElement('script');
+  script.type   = 'text/javascript';
+  script.src    = src;
+  document.getElementsByTagName('head')[0].appendChild(script);
+}());`;
   },
 
   serverMiddleware: function(config) {
